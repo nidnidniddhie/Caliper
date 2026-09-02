@@ -6,13 +6,20 @@ from dotenv import load_dotenv
 
 from market_data import get_price_history
 from technical_desk import compute_technical_score
+from sentiment_desk import compute_sentiment_score
 
 
-# Load environment variables
+# -------------------------
+# LOAD ENVIRONMENT VARIABLES
+# -------------------------
+
 load_dotenv()
 
 
-# Create FastAPI app
+# -------------------------
+# CREATE FASTAPI APP
+# -------------------------
+
 app = FastAPI()
 
 
@@ -119,7 +126,48 @@ def get_technical(ticker: str):
 
     if result is None:
         return {
-            "error": f"No data found for {ticker}"
+            "error": f"No technical data found for {ticker}"
+        }
+
+    return result
+
+
+# -------------------------
+# SENTIMENT DESK
+# -------------------------
+
+@app.get("/sentiment/{ticker}")
+def get_sentiment(ticker: str):
+
+    # Temporary ticker-to-company mapping
+    company_names = {
+        "TCS": "Tata Consultancy Services",
+        "INFY": "Infosys",
+        "RELIANCE": "Reliance Industries",
+        "HDFCBANK": "HDFC Bank",
+        "ICICIBANK": "ICICI Bank",
+        "SBIN": "State Bank of India",
+        "WIPRO": "Wipro",
+        "ITC": "ITC Limited",
+        "HINDUNILVR": "Hindustan Unilever",
+        "BHARTIARTL": "Bharti Airtel",
+        "PAYTM": "Paytm",
+        "MARUTI": "Maruti Suzuki",
+    }
+
+    company_name = company_names.get(
+        ticker.upper(),
+        ticker
+    )
+
+    result = compute_sentiment_score(
+        company_name,
+        ticker
+    )
+
+    if result is None:
+        return {
+            "error": f"No news found for {ticker}"
         }
 
     return result
