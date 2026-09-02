@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from market_data import get_price_history
 from technical_desk import compute_technical_score
 from sentiment_desk import compute_sentiment_score
+from fundamental_desk import compute_fundamental_score
+from committee import get_committee_verdict
 
 
 # -------------------------
@@ -139,7 +141,6 @@ def get_technical(ticker: str):
 @app.get("/sentiment/{ticker}")
 def get_sentiment(ticker: str):
 
-    # Temporary ticker-to-company mapping
     company_names = {
         "TCS": "Tata Consultancy Services",
         "INFY": "Infosys",
@@ -171,3 +172,30 @@ def get_sentiment(ticker: str):
         }
 
     return result
+
+
+# -------------------------
+# FUNDAMENTAL DESK
+# -------------------------
+
+@app.get("/fundamental/{ticker}")
+def get_fundamental(ticker: str):
+
+    result = compute_fundamental_score(ticker)
+
+    if result is None:
+        return {
+            "error": f"No fundamental data found for {ticker}"
+        }
+
+    return result
+
+
+# -------------------------
+# COMMITTEE VERDICT
+# -------------------------
+
+@app.get("/committee/{ticker}")
+def get_committee(ticker: str):
+
+    return get_committee_verdict(ticker)
