@@ -5,21 +5,35 @@ import os
 from dotenv import load_dotenv
 
 from market_data import get_price_history
+from technical_desk import compute_technical_score
 
+
+# Load environment variables
 load_dotenv()
 
+
+# Create FastAPI app
 app = FastAPI()
 
+
+# -------------------------
 # CORS
+# -------------------------
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Database connection
+# -------------------------
+# DATABASE CONNECTION
+# -------------------------
+
 def get_connection():
     return psycopg2.connect(
         host=os.getenv("DB_HOST"),
@@ -30,20 +44,32 @@ def get_connection():
     )
 
 
-# Root endpoint
+# -------------------------
+# ROOT ENDPOINT
+# -------------------------
+
 @app.get("/")
 def read_root():
-    return {"message": "Caliper backend is running"}
+    return {
+        "message": "Caliper backend is running"
+    }
 
 
-# Get stocks from database
+# -------------------------
+# GET STOCKS
+# -------------------------
+
 @app.get("/stocks")
 def get_stocks():
+
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute(
-        "SELECT stock_id, ticker, company_name, sector FROM Stocks;"
+        """
+        SELECT stock_id, ticker, company_name, sector
+        FROM Stocks;
+        """
     )
 
     rows = cur.fetchall()
@@ -62,15 +88,38 @@ def get_stocks():
     ]
 
 
-# Get price history
+# -------------------------
+# GET PRICE HISTORY
+# -------------------------
+
 @app.get("/prices/{ticker}")
 def get_prices(ticker: str):
+
     data = get_price_history(ticker)
 
     if data is None:
-        return {"error": f"No data found for {ticker}"}
+        return {
+            "error": f"No data found for {ticker}"
+        }
 
     return {
         "ticker": ticker.upper(),
         "history": data
     }
+
+
+# -------------------------
+# TECHNICAL DESK
+# -------------------------
+
+@app.get("/technical/{ticker}")
+def get_technical(ticker: str):
+
+    result = compute_technical_score(ticker)
+
+    if result is None:
+        return {
+            "error": f"No data found for {ticker}"
+        }
+
+    return result
